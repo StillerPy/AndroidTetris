@@ -10,12 +10,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import ru.stillercode.logic.BOARD_SIZE
+import ru.stillercode.logic.LEFT
 import ru.stillercode.logic.PIECE_MAX_DIM
+import ru.stillercode.logic.RIGHT
+import ru.stillercode.logic.Tetris
 import ru.stillercode.logic.XY
+import java.util.Collections.rotate
 import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
+    private val cellDrawables = listOf(
+        R.drawable.cell_0,
+        R.drawable.cell_1,
+        R.drawable.cell_2,
+        R.drawable.cell_3,
+        R.drawable.cell_4,
+        R.drawable.cell_5,
+        R.drawable.cell_6)
+    private lateinit var boardCells: List<List<ImageView>>
+    private lateinit var nextPieceCells: List<List<ImageView>>
+    var tetris = Tetris()
+    var isRunning = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -25,32 +41,69 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        val boardCells = createGrid(R.id.play_field, BOARD_SIZE)
-        val nextPieceCells = createGrid(R.id.next_piece_display, PIECE_MAX_DIM)
-        val viewModel: TetrisViewModel by viewModels()
+        boardCells = createGrid(R.id.play_field, BOARD_SIZE)
+        nextPieceCells = createGrid(R.id.next_piece_display, PIECE_MAX_DIM)
         findViewById<Button>(R.id.new_game_button).setOnClickListener {
-            viewModel.newGame()
+            newGame()
         }
         findViewById<Button>(R.id.right_button).setOnClickListener {
-            viewModel.right()
+            right()
         }
         findViewById<Button>(R.id.left_button).setOnClickListener {
-            viewModel.left()
+            left()
         }
         findViewById<Button>(R.id.rotate_button).setOnClickListener {
-            viewModel.rotate()
+            rotatePiece()
         }
         findViewById<Button>(R.id.pause_button).setOnClickListener {
-            viewModel.pause()
+            pause()
         }
-        thread {
-            while (true) {
-                updateVisuals(boardCells, nextPieceCells, viewModel)
-                Thread.sleep(100)
+        pause()
+    }
+
+    private fun rotatePiece() {
+        tetris.rotate()
+        updateVisuals()
+    }
+
+    private fun updateVisuals() {
+        updateGrid(boardCells, tetris.getBoardArrayToDraw(), BOARD_SIZE)
+        updateGrid(nextPieceCells, tetris.getNextPieceArrayToDraw(), PIECE_MAX_DIM)
+        findViewById<Button>(R.id.pause_button).text = if (isRunning) "Pause" else "Run"
+    }
+
+    private fun pause() {
+        isRunning = !isRunning
+        if (isRunning) {
+            runOnUiThread {
+                while (isRunning) {
+                    Thread.sleep(300)
+                    fall()
+                }
             }
         }
-
     }
+
+    private fun fall() {
+        tetris.fall()
+        updateVisuals()
+    }
+
+    private fun left() {
+        tetris.move(LEFT)
+        updateVisuals()
+    }
+
+    private fun right() {
+        tetris.move(RIGHT)
+        updateVisuals()
+    }
+
+    private fun newGame() {
+        tetris = Tetris()
+        updateVisuals()
+    }
+
     private fun createGrid(gridLayoutId: Int, size: XY): List<List<ImageView>> {
         val gridLayout = findViewById<GridLayout>(gridLayoutId)
         val out = mutableListOf<MutableList<ImageView>>()
@@ -76,23 +129,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateGrid(cellGrid: List<List<ImageView>>, valueArray: Array<IntArray>, size: XY) {
         for (y in 0 until size.y) {
             for (x in 0 until size.x) {
-                if (valueArray[y][x] == 0) {
-                    cellGrid[y][x].setBackgroundResource(R.drawable.cell)
-                } else {
-                    //TODO
-                    cellGrid[y][x].setBackgroundResource(R.drawable.livecell)
-                }
+                val picIndex = valueArray[y][x]
+                cellGrid[y][x].setBackgroundResource(cellDrawables[picIndex])
             }
         }
-    }
-    private fun updateVisuals(
-        boardCells: List<List<ImageView>>,
-        nextPieceCells: List<List<ImageView>>,
-        viewModel: TetrisViewModel
-    ) {
-        println("Update")
-        updateGrid(boardCells, viewModel.getBoardArrayToDraw(), BOARD_SIZE)
-        updateGrid(nextPieceCells, viewModel.getNextPieceArrayToDraw(), PIECE_MAX_DIM)
-        findViewById<Button>(R.id.pause_button).text = viewModel.getPauseButtonText()
     }
 }
