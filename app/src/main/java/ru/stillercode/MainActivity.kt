@@ -2,7 +2,7 @@ package ru.stillercode
 
 import android.os.Bundle
 import android.widget.Button
-import android.widget.GridLayout
+import androidx.gridlayout.widget.GridLayout
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -16,9 +16,6 @@ import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-    val boardCells = createGrid(R.id.play_field, BOARD_SIZE)
-    val nextPieceCells = createGrid(R.id.next_piece_display, PIECE_MAX_DIM)
-    val viewModel: TetrisViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,6 +25,9 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        val boardCells = createGrid(R.id.play_field, BOARD_SIZE)
+        val nextPieceCells = createGrid(R.id.next_piece_display, PIECE_MAX_DIM)
+        val viewModel: TetrisViewModel by viewModels()
         findViewById<Button>(R.id.new_game_button).setOnClickListener {
             viewModel.newGame()
         }
@@ -42,6 +42,12 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.pause_button).setOnClickListener {
             viewModel.pause()
+        }
+        thread {
+            while (true) {
+                updateVisuals(boardCells, nextPieceCells, viewModel)
+                Thread.sleep(100)
+            }
         }
 
     }
@@ -79,7 +85,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private fun updateVisuals() {
+    private fun updateVisuals(
+        boardCells: List<List<ImageView>>,
+        nextPieceCells: List<List<ImageView>>,
+        viewModel: TetrisViewModel
+    ) {
+        println("Update")
         updateGrid(boardCells, viewModel.getBoardArrayToDraw(), BOARD_SIZE)
         updateGrid(nextPieceCells, viewModel.getNextPieceArrayToDraw(), PIECE_MAX_DIM)
         findViewById<Button>(R.id.pause_button).text = viewModel.getPauseButtonText()

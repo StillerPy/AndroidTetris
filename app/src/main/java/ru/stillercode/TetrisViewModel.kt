@@ -10,19 +10,13 @@ class TetrisViewModel: ViewModel() {
     private var isLeftHeld = false
     private var isRightHeld = false
     private var isRotateHeld = false
-    private var isRunning = true
+    var isRunning = true
     private var tetris = Tetris()
     fun newGame() {
         tetris = Tetris()
     }
     fun pause() {
         isRunning = !isRunning
-        thread {
-            while (isRunning) {
-                Thread.sleep(300)
-                tetris.fall()
-            }
-        }
     }
     fun getPauseButtonText(): String {
         return if (isRunning) "Pause" else "Run"
@@ -41,5 +35,9 @@ class TetrisViewModel: ViewModel() {
     }
     fun rotate() {
         tetris.rotate()
+    }
+    fun fall() {
+        println("fall")
+        tetris.fall()
     }
 }
