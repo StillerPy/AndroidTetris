@@ -58,11 +58,19 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.rotate_button).setOnClickListener {
             rotatePiece()
         }
+        findViewById<Button>(R.id.down_button).setOnClickListener {
+            down()
+        }
         findViewById<Button>(R.id.pause_button).setOnClickListener {
             pause()
         }
         updateVisuals()
         pause()
+    }
+
+    private fun down() {
+        tetris.down()
+        updateVisuals()
     }
 
     private fun rotatePiece() {
@@ -85,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             thread {
                 while (isRunning) {
                     fall()
-                    Thread.sleep(300)
+                    Thread.sleep(600)
                 }
             }
         }

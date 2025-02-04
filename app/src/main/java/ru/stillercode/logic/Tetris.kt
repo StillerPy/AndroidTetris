@@ -33,7 +33,7 @@ class Tetris {
     fun move(vec: XY) {
         activePiece.move(vec, board)
     }
-    fun fall() {
+    fun fall(): Boolean {
         if (!activePiece.fall(board)) {
             activePiece = nextPiece
             activePiece.place()
@@ -42,7 +42,9 @@ class Tetris {
             }
             nextPiece = makeNewPiece()
             removeLines()
+            return false
         }
+        return true
     }
 
     private fun removeLines() {
@@ -64,5 +66,12 @@ class Tetris {
 
     fun rotate() {
         activePiece.rotate(board)
+    }
+
+    fun down() {
+        var isFalling = true
+        while (isFalling) {
+            isFalling = fall()
+        }
     }
 }

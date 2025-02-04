@@ -1,6 +1,6 @@
 package ru.stillercode.logic
 
-val BOARD_SIZE = XY(10, 20)
+val BOARD_SIZE = XY(12, 24)
 val PIECE_MAX_DIM = XY(4, 4)
 
 val UP = XY(0, -1)
