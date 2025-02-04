@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Button
 import androidx.gridlayout.widget.GridLayout
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -27,11 +28,13 @@ class MainActivity : AppCompatActivity() {
         R.drawable.cell_3,
         R.drawable.cell_4,
         R.drawable.cell_5,
-        R.drawable.cell_6)
+        R.drawable.cell_6,
+        R.drawable.cell_7)
     private lateinit var boardCells: List<List<ImageView>>
     private lateinit var nextPieceCells: List<List<ImageView>>
     var tetris = Tetris()
     var isRunning = false
+    var fallingDelay = 500
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -58,6 +61,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.pause_button).setOnClickListener {
             pause()
         }
+        updateVisuals()
         pause()
     }
 
@@ -65,20 +69,23 @@ class MainActivity : AppCompatActivity() {
         tetris.rotate()
         updateVisuals()
     }
-
+    private fun updateScore() {
+        findViewById<TextView>(R.id.score_text).text = tetris.score.toString()
+    }
     private fun updateVisuals() {
         updateGrid(boardCells, tetris.getBoardArrayToDraw(), BOARD_SIZE)
         updateGrid(nextPieceCells, tetris.getNextPieceArrayToDraw(), PIECE_MAX_DIM)
-        findViewById<Button>(R.id.pause_button).text = if (isRunning) "Pause" else "Run"
+        //updateScore()
     }
 
     private fun pause() {
         isRunning = !isRunning
+        findViewById<Button>(R.id.pause_button).text = if (isRunning) "Pause" else "Run"
         if (isRunning) {
-            runOnUiThread {
+            thread {
                 while (isRunning) {
-                    Thread.sleep(300)
                     fall()
+                    Thread.sleep(300)
                 }
             }
         }
@@ -87,14 +94,19 @@ class MainActivity : AppCompatActivity() {
     private fun fall() {
         tetris.fall()
         updateVisuals()
+        if (tetris.isGameOver) {
+            newGame()
+        }
     }
 
     private fun left() {
+        //if (!isRunning) return
         tetris.move(LEFT)
         updateVisuals()
     }
 
     private fun right() {
+        //if (!isRunning) return
         tetris.move(RIGHT)
         updateVisuals()
     }
@@ -112,11 +124,11 @@ class MainActivity : AppCompatActivity() {
             for (x in 0 until size.x) {
                 val cell = ImageView(this).apply {
                     //setBackgroundResource(R.drawable.cell)
-                    layoutParams = androidx.gridlayout.widget.GridLayout.LayoutParams().apply {
+                    layoutParams = GridLayout.LayoutParams().apply {
                         width = 0
                         height = 0
-                        columnSpec = androidx.gridlayout.widget.GridLayout.spec(x, 1, 1f)
-                        rowSpec = androidx.gridlayout.widget.GridLayout.spec(y, 1, 1f)
+                        columnSpec = GridLayout.spec(x, 1, 1f)
+                        rowSpec = GridLayout.spec(y, 1, 1f)
                     }
                 }
                 gridLayout.addView(cell)

@@ -1,19 +1,22 @@
 package ru.stillercode.logic
 
-class Piece(shapes: List<Set<XY>>, val imageIndex: Int) {
-    private val shapeSwitcher = Switcher(shapes)
-    private var position = START_POINT
+class Piece(var shape: Set<XY>, val imageIndex: Int) {
+    private var rotatingAxis = START_POINT
+
+    fun place() {
+        shape = getShapeAfterMove(shape, rotatingAxis.add(ROTATING_POINT))
+    }
+
+    fun isPlacedValidly(board: Array<IntArray>): Boolean {
+        return doesShapeFit(shape, board)
+    }
 
     fun getShapeToDisplayAsNext(): Set<XY> {
-        val temp = position
-        position = XY(0, 0)
-        val out = getActualShape()
-        position = temp
-        return out
+        return shape
     }
 
     fun getActualShape(): Set<XY> {
-        return getShapeAfterMove(shapeSwitcher.get(), position)
+        return shape
     }
 
     private fun getShapeAfterMove(shape: Set<XY>, vec: XY): Set<XY> {
@@ -30,28 +33,40 @@ class Piece(shapes: List<Set<XY>>, val imageIndex: Int) {
     }
 
     fun move(vec: XY, board: Array<IntArray>): Boolean {
-        val newShape = getShapeAfterMove(shapeSwitcher.get(),position.add(vec))
+        val newShape = getShapeAfterMove(shape, vec)
         if (!doesShapeFit(newShape, board)) {
             return false
         }
-        position = position.add(vec)
+        rotatingAxis = rotatingAxis.add(vec)
+        shape = newShape
         return true
     }
     fun fall(board: Array<IntArray>): Boolean {
         // returns false if piece stopped while falling.
         // New piece should be assigned in this case
-        val newShape = getShapeAfterMove(shapeSwitcher.get(),position.add(DOWN))
+        val newShape = getShapeAfterMove(shape, DOWN)
         if (!doesShapeFit(newShape, board)) {
             stop(board)
             return false
         }
-        position = position.add(DOWN)
+        rotatingAxis = rotatingAxis.add(DOWN)
+        shape = newShape
         return true
     }
+    private fun rotateShape(oldShape: Set<XY>, axis: XY): Set<XY> {
+        val out = mutableSetOf<XY>()
+        for (cell in oldShape) {
+            out.add(XY(
+                x = axis.x + axis.y - cell.y,
+                y = cell.x + axis.x - axis.y
+            ))
+        }
+        return out.toSet()
+    }
     fun rotate(board: Array<IntArray>) {
-        val newShape = getShapeAfterMove(shapeSwitcher.getNext(), position)
+        val newShape = rotateShape(shape, rotatingAxis)
         if (doesShapeFit(newShape, board)) {
-            shapeSwitcher.switch()
+            shape = newShape
         }
     }
     fun stop(board: Array<IntArray>) {
